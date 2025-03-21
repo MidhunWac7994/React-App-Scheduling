@@ -1,28 +1,95 @@
 import React, { useState, useEffect } from "react";
 
-const EventModal = ({ isOpen, onClose, onSave }) => {
+const EventModal = ({ isOpen, onClose, onSave, errorMessage }) => {
   const [title, setTitle] = useState("");
   const [role, setRole] = useState("Project Manager");
-  const [time, setTime] = useState("");
+  const [startTime, setStartTime] = useState("");  // Start time
+  const [endTime, setEndTime] = useState("");      // End time
   const [modalState, setModalState] = useState("closed"); // closed, opening, open, closing
+  const [localError, setLocalError] = useState(""); // For form validation errors
 
+  // Handle modal animation states
   useEffect(() => {
     if (isOpen && modalState === "closed") {
       setModalState("opening");
       setTimeout(() => setModalState("open"), 50); // Trigger animation
+      
+      // Reset form when opening
+      setTitle("");
+      setRole("Project Manager");
+      setStartTime("");
+      setEndTime("");
+      setLocalError("");
     } else if (!isOpen && (modalState === "open" || modalState === "opening")) {
       setModalState("closing");
       setTimeout(() => setModalState("closed"), 300); // Animation duration
     }
   }, [isOpen, modalState]);
 
-  const handleSubmit = () => {
-    if (title && role && time) {
-      onSave({ title, role, time });
-      setTitle("");
-      setRole("Project Manager");
-      setTime("");
+  // Update end time if it becomes invalid after changing start time
+  useEffect(() => {
+    if (startTime && endTime && endTime <= startTime) {
+      // Try to set end time to start time + 1 hour
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
+      let newHours = startHours + 1;
+      
+      // Handle overflow (past midnight)
+      if (newHours >= 24) {
+        newHours = 23;
+        setEndTime(`23:59`);
+      } else {
+        setEndTime(`${newHours.toString().padStart(2, '0')}:${startMinutes.toString().padStart(2, '0')}`);
+      }
     }
+  }, [startTime, endTime]);
+
+  const handleSubmit = () => {
+    // Validate form
+    if (!title.trim()) {
+      setLocalError("Please enter an event name");
+      return;
+    }
+    
+    if (!startTime) {
+      setLocalError("Please select a start time");
+      return;
+    }
+    
+    if (!endTime) {
+      setLocalError("Please select an end time");
+      return;
+    }
+    
+    if (endTime <= startTime) {
+      setLocalError("End time must be later than start time");
+      return;
+    }
+
+    // All validation passed
+    onSave({ title, role, startTime, endTime });
+    setLocalError("");
+  };
+
+  // Min time for end time input based on start time
+  const getMinEndTime = () => {
+    if (!startTime) return "";
+    
+    // Get the next valid time after startTime
+    const [hours, minutes] = startTime.split(':').map(Number);
+    let newMinutes = minutes + 1;
+    let newHours = hours;
+    
+    if (newMinutes >= 60) {
+      newMinutes = 0;
+      newHours += 1;
+    }
+    
+    if (newHours >= 24) {
+      newHours = 23;
+      newMinutes = 59;
+    }
+    
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
   };
 
   if (modalState === "closed") return null;
@@ -51,6 +118,13 @@ const EventModal = ({ isOpen, onClose, onSave }) => {
           Add Event
         </h2>
         
+        {/* Error message display */}
+        {(errorMessage || localError) && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            {errorMessage || localError}
+          </div>
+        )}
+        
         <div className="space-y-5">
           {/* Event Name Input */}
           <div>
@@ -77,15 +151,33 @@ const EventModal = ({ isOpen, onClose, onSave }) => {
             </select>
           </div>
 
-          {/* Time Picker */}
+          {/* Start Time Picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Event Time</label>
+            <label className="block text-sm font-medium text-gray-800 mb-1">Start Time</label>
             <input
               type="time"
               className="w-full p-3 bg-white border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
             />
+          </div>
+
+          {/* End Time Picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-1">End Time</label>
+            <input
+              type="time"
+              className="w-full p-3 bg-white border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              min={getMinEndTime()} // Set minimum time based on start time
+              disabled={!startTime} // Disable until start time is selected
+            />
+            {startTime && (
+              <p className="text-xs text-gray-500 mt-1">
+                Minimum end time: {getMinEndTime()}
+              </p>
+            )}
           </div>
         </div>
 

@@ -16,18 +16,18 @@ const localizer = momentLocalizer(moment);
 const DnDCalendar = withDragAndDrop(Calendar);
 
 const Cra = () => {
-  // State management
-  const [events, setEvents] = useState([]); // Stores all calendar events
-  const [animateEvent, setAnimateEvent] = useState(null); // For animation effects
-  const [currentDate, setCurrentDate] = useState(new Date()); // Current view date
-  const [showTip, setShowTip] = useState(true); // Controls quick tip visibility
-  const [loading, setLoading] = useState(true); // Loading state
-  const [modalOpen, setModalOpen] = useState(false);  // Modal state
-  const [selectedSlot, setSelectedSlot] = useState(null); // Store slot info
+
+  const [events, setEvents] = useState([]); 
+  const [animateEvent, setAnimateEvent] = useState(null); 
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showTip, setShowTip] = useState(true); 
+  const [loading, setLoading] = useState(true); 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null); 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false); 
   const [eventToDelete, setEventToDelete] = useState(null); 
-
-  // Fetch events from API on component mount
+  const [errorMessage, setErrorMessage] = useState(""); 
+  
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -43,7 +43,6 @@ const Cra = () => {
     fetchEvents();
   }, []);
 
-  // Show loading spinner while fetching data
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black">
@@ -54,29 +53,60 @@ const Cra = () => {
 
   const handleSelectSlot = (slotInfo) => {
     setSelectedSlot(slotInfo);
-    setModalOpen(true); // Open modal instead of prompt
+    setErrorMessage(""); // Clear any previous error messages
+    setModalOpen(true);
   };
 
-  const handleSaveEvent = async ({ title, role, time }) => {
+  // Function to check if time slots overlap
+  const isTimeOverlapping = (newStart, newEnd, existingEvents, excludeEventId = null) => {
+    return existingEvents.some(existingEvent => {
+      // Skip the current event being checked (for drag and drop)
+      if (excludeEventId && existingEvent._id === excludeEventId) return false;
+      
+      // Convert dates to comparable format
+      const eventStart = new Date(existingEvent.start);
+      const eventEnd = new Date(existingEvent.end);
+      
+      // Check for overlap: 
+      // (newStart < eventEnd) && (newEnd > eventStart)
+      return (newStart < eventEnd && newEnd > eventStart);
+    });
+  };
+
+  const handleSaveEvent = async ({ title, role, startTime, endTime }) => {
     setModalOpen(false);
   
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const userId = storedUser ? storedUser.userId || storedUser._id : null;
   
     if (!userId) {
-      alert("User not found. Please log in again.");
+    
       return;
     }
   
-    if (title && role && time && selectedSlot) {
-      // Construct full date-time from selected slot's date and chosen time
+    if (title && role && startTime && endTime && selectedSlot) {
       const selectedDate = moment(selectedSlot.start).format("YYYY-MM-DD");
-      const dateTime = moment(`${selectedDate} ${time}`, "YYYY-MM-DD HH:mm").toDate();
+      const startDateTime = moment(`${selectedDate} ${startTime}`, "YYYY-MM-DD HH:mm").toDate();
+      const endDateTime = moment(`${selectedDate} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
+  
+      // Ensure end time is later than start time
+      if (endDateTime <= startDateTime) {
+        setErrorMessage("End time must be later than start time.");
+        alert("End time must be later than start time.");
+        return;
+      }
+      
+      // Check for time slot overlap with existing events
+      if (isTimeOverlapping(startDateTime, endDateTime, events)) {
+        setErrorMessage("This time slot overlaps with an existing booking.");
+        
+        return;
+      }
   
       const newEvent = {
         title: `${title} - ${role}`,
-        start: dateTime,
-        end: moment(dateTime).add(1, "hour").toDate(),
+        start: startDateTime,
+        end: endDateTime,
         userId,
       };
   
@@ -97,8 +127,13 @@ const Cra = () => {
     }
   };
   
-  // Handle event dragging and dropping
   const onEventDrop = async ({ event, start, end }) => {
+    // Check for time slot overlap with existing events
+    if (isTimeOverlapping(start, end, events, event._id)) {
+      alert("This time slot overlaps with an existing booking. Please select a different time.");
+      return;
+    }
+
     const updatedEvent = { ...event, start, end };
 
     try {
@@ -117,14 +152,12 @@ const Cra = () => {
       console.error("Error updating event:", error);
     }
   };
-
   
   const handleDeleteEvent = (event) => {
-    setEventToDelete(event);  // Store the event to be deleted
-    setDeleteModalOpen(true); // Open the delete modal
+    setEventToDelete(event);  
+    setDeleteModalOpen(true); 
   };
 
-  // Perform the delete operation
   const deleteEvent = async (eventId) => {
     try {
       const response = await fetch(`http://localhost:5000/api/events/${eventId}`, {
@@ -135,7 +168,7 @@ const Cra = () => {
       if (!response.ok) throw new Error("Failed to delete event");
 
       setEvents((prev) => prev.filter((e) => e._id !== eventId));
-      setDeleteModalOpen(false); // Close the delete modal after successful deletion
+      setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error deleting event:", error);
     }
@@ -146,6 +179,27 @@ const Cra = () => {
       <h1 className="animate-pulse text-3xl font-bold mb-6 text-white transition-all duration-300 hover:text-gray-300">
         Meeting Room Scheduler
       </h1>
+
+      {errorMessage && (
+  <div 
+    className="bg-red-500 text-white p-4 mb-4 rounded-md shadow-md transform transition-all duration-500 ease-in-out"
+    role="alert"
+  >
+    <div className="flex items-center">
+      <svg 
+        className="w-5 h-5 mr-2" 
+        xmlns="http://www.w3.org/2000/svg" 
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24" 
+        strokeWidth="2"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01m-6.938 3.225A9.96 9.96 0 0112 3a9.96 9.96 0 016.938 12.225m-6.938-2.75V12m0 0v-4m0 0h.01" />
+      </svg>
+      <p>{errorMessage}</p>
+    </div>
+  </div>
+)}
 
 
       <div className="bg-black p-6 rounded-xl shadow-2xl border border-gray-800 transition-all duration-300 hover:shadow-white hover:shadow-sm">
@@ -172,9 +226,17 @@ const Cra = () => {
           })}
           dayPropGetter={(date) => {
             const today = new Date();
+            // Highlight days that already have events
+            const dateStr = moment(date).format("YYYY-MM-DD");
+            const hasEvent = events.some(event => 
+              moment(event.start).format("YYYY-MM-DD") === dateStr
+            );
+            
             return {
-              className: today.toDateString() === date.toDateString() ? "today-highlight" : "",
-              style: {}
+              className: today.toDateString() === date.toDateString() 
+                ? "today-highlight" 
+                : hasEvent ? "has-event" : "",
+              style: hasEvent ? { backgroundColor: "rgba(255, 255, 255, 0.1)" } : {}
             };
           }}
           components={{
@@ -186,16 +248,16 @@ const Cra = () => {
             )
           }}
         />
-     <EventModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSaveEvent} />
+    <EventModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSaveEvent} />
 
       </div>
       
       <DeleteConfirmationModal
-  isOpen={deleteModalOpen}
-  onClose={() => setDeleteModalOpen(false)}
-  onDelete={deleteEvent}
-  event={eventToDelete}
-/>
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onDelete={deleteEvent}
+        event={eventToDelete}
+      />
 
       {/* Quick Tip */}
               {/* Quick Guide Section */}
@@ -211,7 +273,7 @@ const Cra = () => {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">Add Meeting</p>
-                    <p className="text-xs text-gray-400">Click on an empty time slot</p>
+                    <p className="text-xs text-gray-400">Click on an empty time slot (no overlapping times allowed)</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 transition-all duration-300 hover:bg-gray-900 p-3 rounded-lg hover:scale-105">
@@ -233,7 +295,7 @@ const Cra = () => {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">Reschedule</p>
-                    <p className="text-xs text-gray-400">Drag and drop an event</p>
+                    <p className="text-xs text-gray-400">Drag and drop an event (only to non-overlapping time slots)</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 transition-all duration-300 hover:bg-gray-900 p-3 rounded-lg hover:scale-105">
@@ -251,7 +313,7 @@ const Cra = () => {
       {showTip && (
         <div className="fixed bottom-4 right-4 bg-white text-black p-4 rounded-lg shadow-lg animate-slide-in max-w-xs">
           <p className="font-bold">Quick Tip</p>
-          <p className="text-sm">Drag and drop events to reschedule them instantly.</p>
+          <p className="text-sm">The system prevents booking overlapping time slots. You cannot schedule an event during a time that is already booked.</p>
           <button 
             className="mt-2 text-xs underline hover:no-underline" 
             onClick={() => setShowTip(false)}
