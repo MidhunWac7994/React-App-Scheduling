@@ -53,22 +53,20 @@ const Cra = () => {
 
   const handleSelectSlot = (slotInfo) => {
     setSelectedSlot(slotInfo);
-    setErrorMessage(""); // Clear any previous error messages
+    setErrorMessage("");
     setModalOpen(true);
   };
 
-  // Function to check if time slots overlap
   const isTimeOverlapping = (newStart, newEnd, existingEvents, excludeEventId = null) => {
     return existingEvents.some(existingEvent => {
-      // Skip the current event being checked (for drag and drop)
+    
       if (excludeEventId && existingEvent._id === excludeEventId) return false;
       
-      // Convert dates to comparable format
+ 
       const eventStart = new Date(existingEvent.start);
       const eventEnd = new Date(existingEvent.end);
       
-      // Check for overlap: 
-      // (newStart < eventEnd) && (newEnd > eventStart)
+
       return (newStart < eventEnd && newEnd > eventStart);
     });
   };
@@ -89,14 +87,13 @@ const Cra = () => {
       const startDateTime = moment(`${selectedDate} ${startTime}`, "YYYY-MM-DD HH:mm").toDate();
       const endDateTime = moment(`${selectedDate} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
   
-      // Ensure end time is later than start time
+
       if (endDateTime <= startDateTime) {
         setErrorMessage("End time must be later than start time.");
         alert("End time must be later than start time.");
         return;
       }
-      
-      // Check for time slot overlap with existing events
+ 
       if (isTimeOverlapping(startDateTime, endDateTime, events)) {
         setErrorMessage("This time slot overlaps with an existing booking.");
         
@@ -128,7 +125,7 @@ const Cra = () => {
   };
   
   const onEventDrop = async ({ event, start, end }) => {
-    // Check for time slot overlap with existing events
+
     if (isTimeOverlapping(start, end, events, event._id)) {
       alert("This time slot overlaps with an existing booking. Please select a different time.");
       return;
@@ -226,7 +223,7 @@ const Cra = () => {
           })}
           dayPropGetter={(date) => {
             const today = new Date();
-            // Highlight days that already have events
+           
             const dateStr = moment(date).format("YYYY-MM-DD");
             const hasEvent = events.some(event => 
               moment(event.start).format("YYYY-MM-DD") === dateStr
