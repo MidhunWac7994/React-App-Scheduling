@@ -9,10 +9,10 @@ import axios from "axios";
 import EventModal from "./EventModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
-// Set up moment localizer for date formatting
+
 const localizer = momentLocalizer(moment);
 
-// Add drag and drop functionality to the calendar
+
 const DnDCalendar = withDragAndDrop(Calendar);
 
 const Cra = () => {
@@ -256,8 +256,6 @@ const Cra = () => {
         event={eventToDelete}
       />
 
-      {/* Quick Tip */}
-              {/* Quick Guide Section */}
               <h3 className="animate-pulse mb-4">
                 <span className="animate-pulse">Quick Guide</span>
               </h3>
