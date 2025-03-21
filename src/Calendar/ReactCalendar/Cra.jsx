@@ -125,7 +125,8 @@ const Cra = () => {
         }, 300);
       } catch (error) {
         console.error("Error deleting event:", error);
-      }
+      }  const [modalOpen, setModalOpen] = useState(false);  // Modal state
+  const [selectedSlot, setSelectedSlot] = useState(null); // Store slot info
     }
   };
 
