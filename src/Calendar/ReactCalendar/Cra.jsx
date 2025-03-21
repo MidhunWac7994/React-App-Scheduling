@@ -6,6 +6,8 @@ import CalendarStyles from "./CalendarFiles";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";  
 import CustomToolbar from "./CustomToolbar";
 import axios from "axios";
+import EventModal from "./EventModal";
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 // Set up moment localizer for date formatting
 const localizer = momentLocalizer(moment);
@@ -20,6 +22,10 @@ const Cra = () => {
   const [currentDate, setCurrentDate] = useState(new Date()); // Current view date
   const [showTip, setShowTip] = useState(true); // Controls quick tip visibility
   const [loading, setLoading] = useState(true); // Loading state
+  const [modalOpen, setModalOpen] = useState(false);  // Modal state
+  const [selectedSlot, setSelectedSlot] = useState(null); // Store slot info
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false); 
+  const [eventToDelete, setEventToDelete] = useState(null); 
 
   // Fetch events from API on component mount
   useEffect(() => {
@@ -46,38 +52,43 @@ const Cra = () => {
     );
   }
 
-  // Handle creating new events
-  const handleSelectSlot = async (slotInfo) => {
-    const title = window.prompt("Enter event title:");
-    const designation = window.prompt("Enter designation:");
+  const handleSelectSlot = (slotInfo) => {
+    setSelectedSlot(slotInfo);
+    setModalOpen(true); // Open modal instead of prompt
+  };
 
+  const handleSaveEvent = async ({ title, role, time }) => {
+    setModalOpen(false);
+  
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const userId = storedUser ? storedUser.userId || storedUser._id : null;
-
+  
     if (!userId) {
       alert("User not found. Please log in again.");
       return;
     }
-
-    if (title && designation) {
+  
+    if (title && role && time && selectedSlot) {
+      // Construct full date-time from selected slot's date and chosen time
+      const selectedDate = moment(selectedSlot.start).format("YYYY-MM-DD");
+      const dateTime = moment(`${selectedDate} ${time}`, "YYYY-MM-DD HH:mm").toDate();
+  
       const newEvent = {
-        title: `${title} - ${designation}`,
-        start: slotInfo.start,
-        end: moment(slotInfo.start).add(1, "hour").toDate(),
+        title: `${title} - ${role}`,
+        start: dateTime,
+        end: moment(dateTime).add(1, "hour").toDate(),
         userId,
       };
-
+  
       try {
         const response = await fetch("http://localhost:5000/api/events/events", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newEvent),
         });
-
+  
         if (!response.ok) throw new Error("Failed to create event");
-
+  
         const createdEvent = await response.json();
         setEvents((prev) => [...prev, createdEvent]);
       } catch (error) {
@@ -85,7 +96,7 @@ const Cra = () => {
       }
     }
   };
-
+  
   // Handle event dragging and dropping
   const onEventDrop = async ({ event, start, end }) => {
     const updatedEvent = { ...event, start, end };
@@ -107,26 +118,26 @@ const Cra = () => {
     }
   };
 
-  // Handle event deletion
-  const handleDeleteEvent = async (eventId) => {
-    if (window.confirm("Delete this event?")) {
-      setAnimateEvent(eventId);
+  
+  const handleDeleteEvent = (event) => {
+    setEventToDelete(event);  // Store the event to be deleted
+    setDeleteModalOpen(true); // Open the delete modal
+  };
 
-      try {
-        const response = await fetch(`http://localhost:5000/api/events/${eventId}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        });
+  // Perform the delete operation
+  const deleteEvent = async (eventId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
 
-        if (!response.ok) throw new Error("Failed to delete event");
+      if (!response.ok) throw new Error("Failed to delete event");
 
-        setTimeout(() => {
-          setEvents((prev) => prev.filter((e) => e._id !== eventId));
-        }, 300);
-      } catch (error) {
-        console.error("Error deleting event:", error);
-      }  const [modalOpen, setModalOpen] = useState(false);  // Modal state
-  const [selectedSlot, setSelectedSlot] = useState(null); // Store slot info
+      setEvents((prev) => prev.filter((e) => e._id !== eventId));
+      setDeleteModalOpen(false); // Close the delete modal after successful deletion
+    } catch (error) {
+      console.error("Error deleting event:", error);
     }
   };
 
@@ -151,7 +162,7 @@ const Cra = () => {
           resizable
           onEventDrop={onEventDrop}
           onSelectSlot={handleSelectSlot}
-          onSelectEvent={(event) => handleDeleteEvent(event._id)}
+          onSelectEvent={handleDeleteEvent} 
           style={{ height: 600 }}
           draggableAccessor={() => true}
           className="animate-fade-in"
@@ -175,7 +186,16 @@ const Cra = () => {
             )
           }}
         />
+     <EventModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSaveEvent} />
+
       </div>
+      
+      <DeleteConfirmationModal
+  isOpen={deleteModalOpen}
+  onClose={() => setDeleteModalOpen(false)}
+  onDelete={deleteEvent}
+  event={eventToDelete}
+/>
 
       {/* Quick Tip */}
               {/* Quick Guide Section */}
