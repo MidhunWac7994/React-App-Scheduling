@@ -5,7 +5,7 @@ import Navbar from "./Components/Navbar";
 import HomePage from "./Components/Home";
 import Cra from './Calendar/ReactCalendar/Cra'
 import About from "./Components/About";
-
+import ServiceUnderConstruction from "./Components/Service";
 
 function AppWrapper() {
   const location = useLocation(); 
@@ -20,6 +20,7 @@ function AppWrapper() {
         <Route path="/home" element={<HomePage />} />
       <Route path="/Cra/:roomId" element={<Cra />} /> 
       <Route path = 'about' element={<About />} />
+      <Route path = '/services' element={<ServiceUnderConstruction/>} />
       </Routes>
     </>
   );
