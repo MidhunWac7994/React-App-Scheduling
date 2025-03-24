@@ -8,6 +8,7 @@ import CustomToolbar from "./CustomToolbar";
 import axios from "axios";
 import EventModal from "./EventModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import { useParams } from "react-router-dom";
 
 
 const localizer = momentLocalizer(moment);
@@ -27,11 +28,26 @@ const Cra = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false); 
   const [eventToDelete, setEventToDelete] = useState(null); 
   const [errorMessage, setErrorMessage] = useState(""); 
-  
+  const { roomId } = useParams();
+  const [roomDetails, setRoomDetails] = useState(null);
+
+
   useEffect(() => {
-    const fetchEvents = async () => {
+    console.log('Room ID:', roomId); // Log the roomId to check if it's coming correctly
+  
+    const fetchRoomDetails = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/events/events");
+        const response = await axios.get(`http://localhost:5000/api/events/events/${roomId}`);
+        setRoomDetails(response.data); 
+        console.log(response)
+      } catch (error) {
+        console.error("Error fetching room details:", error);
+      }
+    };
+  
+    const fetchEvents = async () => { 
+      try {
+        const response = await axios.get(`http://localhost:5000/api/events/events/${roomId}`);
         setEvents(response.data);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -39,9 +55,14 @@ const Cra = () => {
         setLoading(false);
       }
     };
-
-    fetchEvents();
-  }, []);
+  
+    if (roomId) {
+      fetchRoomDetails();
+      fetchEvents();
+    }
+  
+  }, [roomId]);
+  
 
   if (loading) {
     return (
@@ -49,6 +70,10 @@ const Cra = () => {
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
       </div>
     );
+  }
+
+  if (!roomDetails) {
+    return <div>Room not found</div>; 
   }
 
   const handleSelectSlot = (slotInfo) => {
@@ -74,56 +99,56 @@ const Cra = () => {
   const handleSaveEvent = async ({ title, role, startTime, endTime }) => {
     setModalOpen(false);
   
+    // Assuming user is authenticated
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const userId = storedUser ? storedUser.userId || storedUser._id : null;
+    if (!userId) return;
   
-    if (!userId) {
-    
+    if (!title || !role || !startTime || !endTime || !selectedSlot) {
+      setErrorMessage("All fields are required.");
       return;
     }
   
-    if (title && role && startTime && endTime && selectedSlot) {
-      const selectedDate = moment(selectedSlot.start).format("YYYY-MM-DD");
-      const startDateTime = moment(`${selectedDate} ${startTime}`, "YYYY-MM-DD HH:mm").toDate();
-      const endDateTime = moment(`${selectedDate} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
+    const selectedDate = moment(selectedSlot.start).format("YYYY-MM-DD");
+    const startDateTime = moment(`${selectedDate} ${startTime}`, "YYYY-MM-DD HH:mm").toDate();
+    const endDateTime = moment(`${selectedDate} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
   
-
-      if (endDateTime <= startDateTime) {
-        setErrorMessage("End time must be later than start time.");
-        alert("End time must be later than start time.");
-        return;
-      }
- 
-      if (isTimeOverlapping(startDateTime, endDateTime, events)) {
-        setErrorMessage("This time slot overlaps with an existing booking.");
-        
-        return;
-      }
+    if (endDateTime <= startDateTime) {
+      setErrorMessage("End time must be later than start time.");
+      return;
+    }
   
-      const newEvent = {
-        title: `${title} - ${role}`,
-        start: startDateTime,
-        end: endDateTime,
-        userId,
-      };
+    if (isTimeOverlapping(startDateTime, endDateTime, events)) {
+      setErrorMessage("This time slot overlaps with an existing booking.");
+      return;
+    }
   
-      try {
-        const response = await fetch("http://localhost:5000/api/events/events", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newEvent),
-        });
+    const newEvent = {
+      title: `${title} - ${role}`,
+      start: startDateTime,
+      end: endDateTime,
+      userId,
+    };
   
-        if (!response.ok) throw new Error("Failed to create event");
+    try {
+      const response = await fetch(`http://localhost:5000/api/events/events/${roomId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEvent),
+      });
   
-        const createdEvent = await response.json();
-        setEvents((prev) => [...prev, createdEvent]);
-      } catch (error) {
-        console.error("Error creating event:", error);
-      }
+      if (!response.ok) throw new Error("Failed to create event");
+  
+      const createdEvent = await response.json();
+  
+      // Add the new event to state after successful creation
+      setEvents((prev) => [...prev, createdEvent]);
+    } catch (error) {
+      console.error("Error creating event:", error);
     }
   };
   
+
   const onEventDrop = async ({ event, start, end }) => {
 
     if (isTimeOverlapping(start, end, events, event._id)) {
@@ -161,16 +186,20 @@ const Cra = () => {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
-
+  
       if (!response.ok) throw new Error("Failed to delete event");
-
-      setEvents((prev) => prev.filter((e) => e._id !== eventId));
+  
+      setEvents((prev) => {
+        const updatedEvents = prev.filter((e) => e._id !== eventId);
+        localStorage.setItem("events", JSON.stringify(updatedEvents)); // Remove from localStorage
+        return updatedEvents;
+      });
       setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error deleting event:", error);
     }
   };
-
+  
   return (
     <div className="p-6 bg-black text-white min-h-screen transition-all duration-500 ease-in-out">
       <h1 className="animate-pulse text-3xl font-bold mb-6 text-white transition-all duration-300 hover:text-gray-300">

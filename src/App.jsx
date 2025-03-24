@@ -4,6 +4,8 @@ import LoginPage from "./Auth/Login";
 import Navbar from "./Components/Navbar";
 import HomePage from "./Components/Home";
 import Cra from './Calendar/ReactCalendar/Cra'
+import About from "./Components/About";
+
 
 function AppWrapper() {
   const location = useLocation(); 
@@ -16,7 +18,8 @@ function AppWrapper() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/home" element={<HomePage />} />
-        <Route path="/Cra" element={<Cra/>} />
+      <Route path="/Cra/:roomId" element={<Cra />} /> 
+      <Route path = 'about' element={<About />} />
       </Routes>
     </>
   );

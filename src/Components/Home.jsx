@@ -5,7 +5,7 @@ import { Home, X } from 'lucide-react';
 const HomePage = () => {
   const [showRooms, setShowRooms] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const navigate = useNavigate(); // Use the useNavigate hook
+  const navigate = useNavigate();
 
   const rooms = [
     { id: 1, name: "Conference Room A", capacity: 12, available: true },
@@ -19,11 +19,9 @@ const HomePage = () => {
     setTimeout(() => setIsAnimating(false), 1000);
   };
 
-  const handleBookNow = (roomId) => {
-    if (roomId === 1) {
-      navigate('/Cra'); // Navigate to the Create page
-    }
-  };
+const handleBookNow = (roomId) => {
+  navigate(`/Cra/${roomId}`); 
+};
 
   return (
     <div className="min-h-screen flex flex-col overflow-hidden">
@@ -35,7 +33,7 @@ const HomePage = () => {
       
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 relative">
-        {/* Background gradient effect that appears when rooms are shown */}
+    
         <div 
           className={`absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 transition-opacity duration-1000 ${showRooms ? 'opacity-100' : 'opacity-0'}`}
         ></div>
@@ -141,7 +139,7 @@ const HomePage = () => {
         }
       `}</style>
     </div>
-  );
+  );  
 };
 
 export default HomePage;
