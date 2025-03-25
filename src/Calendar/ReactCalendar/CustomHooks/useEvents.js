@@ -8,7 +8,7 @@ export const useEvents = (roomId) => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const { data, error, isLoading, mutate } = useSWR(
-    roomId ? `/events/events/${roomId}` : null,
+    roomId ? `/events/${roomId}` : null,
     fetcher
   );
 
@@ -25,7 +25,7 @@ export const useEvents = (roomId) => {
 
   const createEvent = async (newEvent) => {
     try {
-      await api.post(`/events/events/${roomId}`, newEvent);
+      await api.post(`/events/${roomId}`, newEvent);
       await mutate();
       return { success: true };
     } catch (error) {
