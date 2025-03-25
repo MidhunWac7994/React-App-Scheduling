@@ -1,14 +1,17 @@
 import useSWR from "swr";
-import api from "../../../api";
+import axios from "axios";
 
-const fetcher = (url) => api.get(url).then((res) => res.data);
+const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 export const useRoom = (roomId) => {
   const {
     data: roomDetails,
     error,
     isLoading,
-  } = useSWR(roomId ? `/events/${roomId}` : null, fetcher);
+  } = useSWR(
+    roomId ? `http://localhost:5000/api/events/events/${roomId}` : null,
+    fetcher
+  );
 
   return {
     roomDetails,
