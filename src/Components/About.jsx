@@ -8,7 +8,7 @@ const About = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
   
-  // Animation variants
+ 
   const fadeIn = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.8 } }
@@ -79,7 +79,7 @@ const About = () => {
               whileHover="hover"
               variants={imageHover}
             >
-              <img src="/public/wac.png" alt="Our Mission" className="rounded-lg shadow-lg transition-all duration-300"/>
+              <img src="/wc.png" alt="Our Mission" className="rounded-lg shadow-lg transition-all duration-300"/>
             </motion.div>
             <motion.div 
               className="md:w-1/2 md:pl-12"
@@ -93,7 +93,7 @@ const About = () => {
         </div>
       </motion.section>
 
-      {/* Team Section */}
+
       <motion.section 
         className="py-16 bg-gray-100"
         initial="hidden"
@@ -109,25 +109,25 @@ const About = () => {
             Our Team
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Team Member 1 */}
+     
             <motion.div 
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300"
               whileHover={{ y: -10 }}
               variants={fadeIn}
             >
-              <img src="/public/A.png" alt="Team Member" className="rounded-full mx-auto mb-4"/>
+              <img src="/A.png" alt="Team Member" className="rounded-full mx-auto mb-4"/>
               <h3 className="text-xl font-semibold">Abhin Jose</h3>
               <p className="text-gray-600 mb-2">Founder</p>
               <p className="text-gray-700 text-sm">With over 15 years of industry experience, Abhin leads our vision with passion and insight.</p>
             </motion.div>
             
-            {/* Team Member 2 */}
+
             <motion.div 
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300"
               whileHover={{ y: -10 }}
               variants={fadeIn}
             >
-              <img src="/public/J.png" alt="Team Member" className="rounded-full mx-auto mb-4"/>
+              <img src="/J.png" alt="Team Member" className="rounded-full mx-auto mb-4"/>
               <h3 className="text-xl font-semibold">Jilu Jospeh</h3>
               <p className="text-gray-600 mb-2">CEO</p>
               <p className="text-gray-700 text-sm">The transformational and inspiring journey of Jilu Joseph, from Vice President to CEO of Webandcrafts, has been an inspiration to the organisation while taking newer steps towards the global digital revolution.</p>
@@ -139,7 +139,7 @@ const About = () => {
               whileHover={{ y: -10 }}
               variants={fadeIn}
             >
-              <img src="/public/V.png" alt="Team Member" className="rounded-full mx-auto mb-4"/>
+              <img src="/V.png" alt="Team Member" className="rounded-full mx-auto mb-4"/>
               <h3 className="text-xl font-semibold">Vinoth Kumar</h3>
               <p className="text-gray-600 mb-2">CTO</p>
               <p className="text-gray-700 text-sm">John brings technological expertise and innovative thinking to every project we undertake.</p>
@@ -148,7 +148,7 @@ const About = () => {
         </div>
       </motion.section>
 
-      {/* Values Section */}
+      
       <motion.section 
         className="py-16 bg-white"
         initial="hidden"
@@ -164,7 +164,7 @@ const About = () => {
             Our Values
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Value 1 */}
+
             <motion.div 
               className="text-center"
               variants={fadeIn}
@@ -187,7 +187,7 @@ const About = () => {
               <p className="text-gray-700">We continuously seek new and better ways to solve problems.</p>
             </motion.div>
             
-            {/* Value 2 */}
+
             <motion.div 
               className="text-center"
               variants={fadeIn}
@@ -259,7 +259,7 @@ const About = () => {
         </div>
       </motion.section>
 
-      {/* History Section */}
+  
       <motion.section 
         className="py-16 bg-gray-100"
         initial="hidden"
@@ -289,9 +289,9 @@ const About = () => {
         </div>
       </motion.section>
 
-      {/* Contact CTA */}
+
       <motion.section 
-        className="py-16 bg-gray-900 text-white"
+        className="py-16 bg-white text-black"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}

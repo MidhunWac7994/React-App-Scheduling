@@ -17,14 +17,22 @@ const CalendarComponent = ({
   handleEventDrop,
   animateEvent
 }) => {
+  const [view, setView] = React.useState("month");
+
   return (
     <DnDCalendar
       localizer={localizer}
-      events={events}
+      events={events.map(event => ({
+        ...event,
+        start: new Date(event.start),
+        end: new Date(event.end),
+      }))}
       startAccessor="start"
       endAccessor="end"
       date={currentDate}
       onNavigate={setCurrentDate}
+      view={view}
+      onView={setView}
       selectable
       resizable
       onEventDrop={handleEventDrop}
@@ -33,31 +41,8 @@ const CalendarComponent = ({
       style={{ height: 600 }}
       draggableAccessor={() => true}
       className="animate-fade-in"
-      eventPropGetter={(event) => ({
-        className: `${animateEvent === event._id ? "event-delete" : ""}`,
-        style: { backgroundColor: "#ffffff", color: "#000000" }
-      })}
-      dayPropGetter={(date) => {
-        const today = new Date();
-        const dateStr = moment(date).format("YYYY-MM-DD");
-        const hasEvent = events.some(event => 
-          moment(event.start).format("YYYY-MM-DD") === dateStr
-        );
-        
-        return {
-          className: today.toDateString() === date.toDateString() 
-            ? "today-highlight" 
-            : hasEvent ? "has-event" : "",
-          style: hasEvent ? { backgroundColor: "rgba(255, 255, 255, 0.1)" } : {}
-        };
-      }}
       components={{
         toolbar: CustomToolbar,
-        event: ({ event }) => (
-          <div className="overflow-hidden w-full h-full">
-            <p className="font-medium text-xs md:text-sm truncate">{event.title}</p>
-          </div>
-        )
       }}
     />
   );

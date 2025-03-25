@@ -9,7 +9,7 @@ export const useRoom = (roomId) => {
     error,
     isLoading,
   } = useSWR(
-    roomId ? `http://localhost:5000/api/events/events/${roomId}` : null,
+    roomId ? `https://backend-scheduling-vvbm.onrender.com/events/${roomId}` : null,
     fetcher
   );
 
