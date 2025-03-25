@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://backend-scheduling-vvbm.onrender.com/api/events", 
+  baseURL: "https://backend-scheduling-vvbm.onrender.com", 
   headers: { "Content-Type": "application/json" },
 });
 
