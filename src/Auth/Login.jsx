@@ -12,7 +12,7 @@ function LoginPage() {
   const [user, setUser] = useAtom(userAtom);
   const navigate = useNavigate();
 
-  // Load stored user data from local storage
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -25,14 +25,14 @@ function LoginPage() {
     const decoded = jwtDecode(credentialResponse.credential);
   
     const userData = {
-      _id: decoded.sub,  // Google's unique ID
+      _id: decoded.sub,  
       name: decoded.name,
       email: decoded.email,
       picture: decoded.picture,
     };
   
     try {
-      const res = await api.post('/api/auth/google-login', userData, { withCredentials: true });
+      const res = await api.post('/auth/google-login', userData, { withCredentials: true });
       const data = res.data;
       if (res.status === 200) {
         console.log("Login successful:", data.user);
