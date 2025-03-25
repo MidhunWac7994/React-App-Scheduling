@@ -8,7 +8,7 @@ export const useEvents = (roomId) => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const { data, error, isLoading, mutate } = useSWR(
-    roomId ? `/events/${roomId}` : null, // ✅ Correct API route
+    roomId ? `/api/events/${roomId}` : null, // ✅ Correct API route
     fetcher
   );
 
