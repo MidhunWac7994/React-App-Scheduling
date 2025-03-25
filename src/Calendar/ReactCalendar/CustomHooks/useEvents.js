@@ -37,7 +37,7 @@ export const useEvents = (roomId) => {
 
   const deleteEvent = async (eventId) => {
     try {
-      await api.delete(`/events/${eventId}`);
+      await api.delete(`/events/events/${eventId}`);
       await mutate();
       return { success: true };
     } catch (error) {
@@ -58,3 +58,4 @@ export const useEvents = (roomId) => {
     deleteEvent,
   };
 };
+
