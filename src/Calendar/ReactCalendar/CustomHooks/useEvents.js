@@ -8,11 +8,11 @@ export const useEvents = (roomId) => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const { data, error, isLoading, mutate } = useSWR(
-    roomId ? `/events/events/${roomId}` : null,
+    roomId ? `/events/${roomId}` : null, // ✅ Correct API route
     fetcher
   );
 
-  const events = data ? data.filter((event) => event.roomId === roomId) : [];
+  const events = data || [];
 
   const isTimeOverlapping = (newStart, newEnd, excludeEventId = null) => {
     return events.some((existingEvent) => {
@@ -25,24 +25,24 @@ export const useEvents = (roomId) => {
 
   const createEvent = async (newEvent) => {
     try {
-      await api.post(`/events/events/${roomId}`, newEvent);
+      await api.post(`/events/${roomId}`, newEvent); // ✅ roomId is required in POST
       await mutate();
       return { success: true };
     } catch (error) {
-      console.error("Error creating event:", error);
-      setErrorMessage("Failed to create the event. Please try again.");
+      console.error("Error creating event:", error?.response?.data || error);
+      setErrorMessage(error?.response?.data?.message || "Failed to create the event. Please try again.");
       return { success: false, error };
     }
   };
 
   const deleteEvent = async (eventId) => {
     try {
-      await api.delete(`/events/${eventId}`);
+      await api.delete(`/${eventId}`); // ✅ Matches backend DELETE route
       await mutate();
       return { success: true };
     } catch (error) {
-      console.error("Error deleting event:", error);
-      setErrorMessage("Failed to delete the event. Please try again.");
+      console.error("Error deleting event:", error?.response?.data || error);
+      setErrorMessage(error?.response?.data?.message || "Failed to delete the event. Please try again.");
       return { success: false, error };
     }
   };
