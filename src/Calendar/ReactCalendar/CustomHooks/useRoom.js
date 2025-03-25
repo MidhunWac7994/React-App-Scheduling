@@ -1,17 +1,14 @@
 import useSWR from "swr";
-import axios from "axios";
+import api from "../../../api";
 
-const fetcher = (url) => axios.get(url).then((res) => res.data);
+const fetcher = (url) => api.get(url).then((res) => res.data);
 
 export const useRoom = (roomId) => {
   const {
     data: roomDetails,
     error,
     isLoading,
-  } = useSWR(
-    roomId ? `https://backend-scheduling-vvbm.onrender.com/events/${roomId}` : null,
-    fetcher
-  );
+  } = useSWR(roomId ? `/events/${roomId}` : null, fetcher);
 
   return {
     roomDetails,

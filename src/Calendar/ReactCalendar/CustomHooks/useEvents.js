@@ -1,48 +1,89 @@
 import { useState } from "react";
 import useSWR from "swr";
-import api from "../../../api";
+import axios from "axios";
 
-const fetcher = (url) => api.get(url).then((res) => res.data);
+const fetcher = (url) => axios.get(url).then((res) => res.data);
+
 
 export const useEvents = (roomId) => {
   const [errorMessage, setErrorMessage] = useState("");
 
+
   const { data, error, isLoading, mutate } = useSWR(
-    roomId ? `/api/events/${roomId}` : null, // ✅ Correct API route
+    roomId ? `http://localhost:5000/api/events/events/${roomId}` : null,
     fetcher
   );
 
-  const events = data || [];
+
+  const events = data ? data.filter(event => event.roomId === roomId) : [];
+
 
   const isTimeOverlapping = (newStart, newEnd, excludeEventId = null) => {
-    return events.some((existingEvent) => {
+    return events.some(existingEvent => {
       if (excludeEventId && existingEvent._id === excludeEventId) return false;
+      
       const eventStart = new Date(existingEvent.start);
       const eventEnd = new Date(existingEvent.end);
-      return newStart < eventEnd && newEnd > eventStart;
+      
+      return (newStart < eventEnd && newEnd > eventStart);
     });
   };
 
   const createEvent = async (newEvent) => {
     try {
-      await api.post(`/events/${roomId}`, newEvent); // ✅ roomId is required in POST
+      const response = await fetch(`http://localhost:5000/api/events/events/${roomId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEvent),
+      });
+
+      if (!response.ok) throw new Error("Failed to create event");
+
       await mutate();
       return { success: true };
     } catch (error) {
-      console.error("Error creating event:", error?.response?.data || error);
-      setErrorMessage(error?.response?.data?.message || "Failed to create the event. Please try again.");
+      console.error("Error creating event:", error);
+      setErrorMessage("Failed to create the event. Please try again.");
       return { success: false, error };
     }
   };
 
-  const deleteEvent = async (eventId) => {
+
+  const updateEvent = async (updatedEvent) => {
     try {
-      await api.delete(`/${eventId}`); // ✅ Matches backend DELETE route
+      const response = await fetch(`http://localhost:5000/api/events/${updatedEvent._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedEvent),
+      });
+
+      if (!response.ok) throw new Error("Failed to update event");
+
       await mutate();
       return { success: true };
     } catch (error) {
-      console.error("Error deleting event:", error?.response?.data || error);
-      setErrorMessage(error?.response?.data?.message || "Failed to delete the event. Please try again.");
+      console.error("Error updating event:", error);
+      setErrorMessage("Failed to update the event. Please try again.");
+      return { success: false, error };
+    }
+  };
+
+
+  const deleteEvent = async (eventId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error("Failed to delete event");
+
+
+      await mutate();
+      return { success: true };
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      setErrorMessage("Failed to delete the event. Please try again.");
       return { success: false, error };
     }
   };
@@ -55,6 +96,7 @@ export const useEvents = (roomId) => {
     setErrorMessage,
     isTimeOverlapping,
     createEvent,
-    deleteEvent,
+    updateEvent,
+    deleteEvent
   };
 };
