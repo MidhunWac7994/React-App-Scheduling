@@ -66,11 +66,11 @@ export const useEvents = (roomId) => {
       return { success: false, error };
     }
   };
-
+  
 
   const deleteEvent = async (eventId) => {
     try {
-      const response = await fetch(`https://backend-scheduling-vvbm.onrender.com/api/events/${eventId}`, {
+      const response = await fetch(`https://backend-scheduling-vvbm.onrender.com/api/events${eventId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
