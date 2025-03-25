@@ -8,7 +8,6 @@ const fetcher = (url) => axios.get(url).then((res) => res.data);
 export const useEvents = (roomId) => {
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Fetch events with SWR
   const { data, error, isLoading, mutate } = useSWR(
     roomId ? `https://backend-scheduling-vvbm.onrender.com/api/events/events/${roomId}` : null,
     fetcher
@@ -71,7 +70,7 @@ export const useEvents = (roomId) => {
 
   const deleteEvent = async (eventId) => {
     try {
-      const response = await fetch(`https://backend-scheduling-vvbm.onrender.com/api/api/events/${eventId}`, {
+      const response = await fetch(`https://backend-scheduling-vvbm.onrender.com/api/events/${eventId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
