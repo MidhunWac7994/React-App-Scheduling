@@ -31,7 +31,7 @@
       };
     
       try {
-        const res = await fetch('http://localhost:5000/api/auth/google-login', {
+        const res = await fetch('https://backend-scheduling-vvbm.onrender.com/api/auth/google-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
