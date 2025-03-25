@@ -1,75 +1,49 @@
 import { useState } from "react";
-import useSWR from "swr";
-import api from "./api"; 
+import moment from "moment";
 
-const fetcher = (url) => api.get(url).then((res) => res.data);
 
-export const useEvents = (roomId) => {
-  const [errorMessage, setErrorMessage] = useState("");
+export const useCalendarState = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showTip, setShowTip] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+  const [animateEvent, setAnimateEvent] = useState(null);
 
-  const { data, error, isLoading, mutate } = useSWR(
-    roomId ? `/events/events/${roomId}` : null,
-    fetcher
-  );
-
-  const events = data ? data.filter(event => event.roomId === roomId) : [];
-
-  const isTimeOverlapping = (newStart, newEnd, excludeEventId = null) => {
-    return events.some(existingEvent => {
-      if (excludeEventId && existingEvent._id === excludeEventId) return false;
-      
-      const eventStart = new Date(existingEvent.start);
-      const eventEnd = new Date(existingEvent.end);
-      
-      return (newStart < eventEnd && newEnd > eventStart);
-    });
+  const handleSelectSlot = (slotInfo) => {
+    setSelectedSlot(slotInfo);
+    setModalOpen(true);
   };
 
-  const createEvent = async (newEvent) => {
-    try {
-      await api.post(`/events/events/${roomId}`, newEvent);
-      await mutate();
-      return { success: true };
-    } catch (error) {
-      console.error("Error creating event:", error);
-      setErrorMessage("Failed to create the event. Please try again.");
-      return { success: false, error };
-    }
+  const handleDeleteEvent = (event) => {
+    setEventToDelete(event);
+    setDeleteModalOpen(true);
   };
 
-  const updateEvent = async (updatedEvent) => {
-    try {
-      await api.put(`/events/${updatedEvent._id}`, updatedEvent);
-      await mutate();
-      return { success: true };
-    } catch (error) {
-      console.error("Error updating event:", error);
-      setErrorMessage("Failed to update the event. Please try again.");
-      return { success: false, error };
-    }
+  const closeEventModal = () => {
+    setModalOpen(false);
+    setSelectedSlot(null);
   };
 
-  const deleteEvent = async (eventId) => {
-    try {
-      await api.delete(`/events/${eventId}`);
-      await mutate();
-      return { success: true };
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      setErrorMessage("Failed to delete the event. Please try again.");
-      return { success: false, error };
-    }
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setEventToDelete(null);
   };
 
   return {
-    events,
-    isLoadingEvents: isLoading,
-    isErrorEvents: error,
-    errorMessage,
-    setErrorMessage,
-    isTimeOverlapping,
-    createEvent,
-    updateEvent,
-    deleteEvent
+    currentDate,
+    setCurrentDate,
+    showTip,
+    setShowTip,
+    modalOpen,
+    selectedSlot,
+    deleteModalOpen,
+    eventToDelete,
+    animateEvent,
+    handleSelectSlot,
+    handleDeleteEvent,
+    closeEventModal,
+    closeDeleteModal
   };
 };
